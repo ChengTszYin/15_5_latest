@@ -1,0 +1,57 @@
+import sys
+import cv2
+import numpy as np
+import time
+from matplotlib import pyplot as pltq
+import serial
+import struct
+import multiprocessing
+import threading
+import time
+
+ser = serial.Serial(
+port = "COM7",
+baudrate = 115200,
+bytesize = serial.EIGHTBITS, 
+parity = serial.PARITY_NONE,
+stopbits = serial.STOPBITS_ONE, 
+)
+digi = 0
+ss = ''
+x = 100
+cap = cv2.VideoCapture(0)
+
+def serial(q):
+    global ss, digi
+    ser.open()
+    while ser.isOpen():
+        cc = ser.read(1).decode('utf-8').replace("\r\n","")
+        ss = str(cc)
+        x = ((int(ss) - 20000)/150000) * 500
+
+  
+def camera(q):
+    global cap, x
+    while True:
+        ret, frame = cap.read() 
+        image = cv2.flip(frame, 0)
+        image = cv2.flip(image, 1)
+        cv2.circle(image,(300,x), 20, (0,255,0), 0)
+        cv2.imshow('webcam', image)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            camera.release()
+            cv2.destroyAllWindows()
+            break
+  
+if __name__ == "__main__":
+    # creating processes
+    q = multiprocessing.Queue()
+    p1 = multiprocessing.Process(target=serial, args=(q,))
+    #p2 = multiprocessing.Process(target=camera, args=(q,))
+    #p2.start()
+    p1.start()
+    #p2.join()
+    p1.join()
+
+  
+   
